@@ -16,10 +16,13 @@
 
 		<script src="../build/three.js"></script>
 
+    <script src="../examples/js/controls/OrbitControls.js"></script>
+
 		<script>
 
-			var camera, scene, renderer,controls;
-			var planets=[]
+			var camera, scene, renderer;
+      //Tableau permettant de stocker les objets de la classe Planet
+      var planets=[];
 
 			class Planet {
 				constructor(name,planetRadius,yRotation,systemCenterPosition,systemCenterDistance,planetTexture){
@@ -32,82 +35,71 @@
 				}
 
 				get position(){
+          //Retourne la position d'une planète en fonction de la position du centre de son système additionné à sa distance du centre de son système
 					return this.systemCenterPosition+this.systemCenterDistance;
 				}
 			}
 
-
+      //Création des objets de la classe Planet
 			const sun=new Planet("sun",20,0.05,0,0,'../examples/textures/planets/sunmap.jpg')
-			const earth=new Planet("earth",20,0.08,sun.position,50,'../examples/textures/planets/earth_atmos_2048.jpg')
+			const earth=new Planet("earth",20,0.08,sun.position,150,'../examples/textures/planets/earth_atmos_2048.jpg')//La position du centre du système de l'objet earth est la position de l'objet sun
 
+      //Affectation des planètes au tableau planets
 			planets.push(sun);
 			planets.push(earth);
 
-			for (var i = 0 ; i< planets.length;i++){
-				console.log(planets[i]);
-			}
+			// for (var i = 0 ; i< planets.length;i++){
+			// 	console.log(planets[i]);
+			// }
+
 
 			init();
 			animate();
 
-			window.addEventListener("keydown",(e)=>{
-
-				if(e.key=="ArrowUp"){
-					camera.position.z-=4;
-				}
-
-				else if(e.key=="ArrowDown"){
-					camera.position.z+=4;
-				}
-
-				else if(e.key=="ArrowLeft"){
-					camera.position.x-=4;
-				}
-				else if(e.key=="ArrowRight"){
-					camera.position.x+=4;
-				}
-			})
-
-			// window.addEventListener("click",(e)=>{
-      //
-			// }
-
-
 			function init() {
 
 				scene = new THREE.Scene();
+
         camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
-  			// controls = new THREE.OrbitControls( camera );
-
 				camera.position.z = 400;
-				// controls.update;
 
-				// controls.maxPolarAngle = Math.PI * 0.5;
-				// controls.minDistance = 400;
-				// controls.maxDistance = 800;
-
+        //Attribution aux planète
 				for (var i = 0 ; i< planets.length;i++){
 
+          //Charge une texture
 					var texture = new THREE.TextureLoader().load( planets[i].planetTexture);
+
+          //Colle une texture
 					var material = new THREE.MeshBasicMaterial( { map: texture } );
+
+          //Modélise l'objet sphérique
 					var geometry = new THREE.SphereBufferGeometry( planets[i].planetRadius, 32, 32 );
 
+          //Attribut l'effet de mouvement éliptique à un objet, le point de pivot
+          geometry.applyMatrix( new THREE.Matrix4().makeTranslation(planets[i].position, 0, 0 ) );
+
+          //Affectation d'un Mesh à la propriété three d'une planète, création de la propriété three à la volé pour pouvoir interargir avec la bibliothèque Three.
 					planets[i].three = new THREE.Mesh( geometry, material );
+
+          //Ajoute la planète à la scène
 					scene.add( planets[i].three )
-					planets[i].three.position.set(planets[i].position, 0, 0)
+
+          //Applique l'antialaising
 					renderer = new THREE.WebGLRenderer( { antialias: true } );
 				}
-
-
 
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				document.body.appendChild( renderer.domElement );
 
+        //Permet de contrôler la caméra rotative
+        var controls = new THREE.OrbitControls( camera, renderer.domElement );
+
 				window.addEventListener( 'resize', onWindowResize, false );
 
 			}
 
+      //Fonction permet de recadrer la caméra lors d'un redimmensionnement de fenêtre
 			function onWindowResize() {
 
 				camera.aspect = window.innerWidth / window.innerHeight;
