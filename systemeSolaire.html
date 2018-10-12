@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Système solaire</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				margin: 0px;
+				background-color: #000000;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script src="../build/three.js"></script>
+
+		<script>
+
+			var camera, scene, renderer,controls;
+			var planets=[]
+
+			class Planet {
+				constructor(name,planetRadius,yRotation,systemCenterPosition,systemCenterDistance,planetTexture){
+					this.name=name;
+					this.planetRadius=planetRadius;
+					this.yRotation=yRotation;
+					this.systemCenterPosition=systemCenterPosition;
+					this.systemCenterDistance=systemCenterDistance;
+					this.planetTexture=planetTexture;
+				}
+
+				get position(){
+					return this.systemCenterPosition+this.systemCenterDistance;
+				}
+			}
+
+
+			const sun=new Planet("sun",20,0.05,0,0,'../examples/textures/planets/sunmap.jpg')
+			const earth=new Planet("earth",20,0.08,sun.position,50,'../examples/textures/planets/earth_atmos_2048.jpg')
+
+			planets.push(sun);
+			planets.push(earth);
+
+			for (var i = 0 ; i< planets.length;i++){
+				console.log(planets[i]);
+			}
+
+			init();
+			animate();
+
+			window.addEventListener("keydown",(e)=>{
+
+				if(e.key=="ArrowUp"){
+					camera.position.z-=4;
+				}
+
+				else if(e.key=="ArrowDown"){
+					camera.position.z+=4;
+				}
+
+				else if(e.key=="ArrowLeft"){
+					camera.position.x-=4;
+				}
+				else if(e.key=="ArrowRight"){
+					camera.position.x+=4;
+				}
+			})
+
+			// window.addEventListener("click",(e)=>{
+      //
+			// }
+
+
+			function init() {
+
+				scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
+  			// controls = new THREE.OrbitControls( camera );
+
+				camera.position.z = 400;
+				// controls.update;
+
+				// controls.maxPolarAngle = Math.PI * 0.5;
+				// controls.minDistance = 400;
+				// controls.maxDistance = 800;
+
+				for (var i = 0 ; i< planets.length;i++){
+
+					var texture = new THREE.TextureLoader().load( planets[i].planetTexture);
+					var material = new THREE.MeshBasicMaterial( { map: texture } );
+					var geometry = new THREE.SphereBufferGeometry( planets[i].planetRadius, 32, 32 );
+
+					planets[i].three = new THREE.Mesh( geometry, material );
+					scene.add( planets[i].three )
+					planets[i].three.position.set(planets[i].position, 0, 0)
+					renderer = new THREE.WebGLRenderer( { antialias: true } );
+				}
+
+
+
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				for (var i = 0 ; i< planets.length;i++){
+					planets[i].three.rotation.y += planets[i].yRotation;
+				}
+				//sphere.rotation.y += 0.01;
+
+				renderer.render( scene, camera );
+			}
+
+
+
+		</script>
+
+	</body>
+</html>
