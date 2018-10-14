@@ -43,14 +43,16 @@
       //Création des objets de la classe Planet
 			const sun=new Planet("sun",20,0.05,0,0,'../examples/textures/planets/sunmap.jpg')
 			const earth=new Planet("earth",20,0.08,sun.position,150,'../examples/textures/planets/earth_atmos_2048.jpg')//La position du centre du système de l'objet earth est la position de l'objet sun
+			const moon=new Planet("earth",5,0.08,earth.position,150,'../examples/textures/planets/moon_1024.jpg')
 
       //Affectation des planètes au tableau planets
 			planets.push(sun);
 			planets.push(earth);
+			planets.push(moon);
 
-			// for (var i = 0 ; i< planets.length;i++){
-			// 	console.log(planets[i]);
-			// }
+			for (var i = 0 ; i< planets.length;i++){
+				console.log(planets[i]);
+			}
 
 
 			init();
@@ -76,7 +78,7 @@
 					var geometry = new THREE.SphereBufferGeometry( planets[i].planetRadius, 32, 32 );
 
           //Attribut l'effet de mouvement éliptique à un objet, le point de pivot
-          geometry.applyMatrix( new THREE.Matrix4().makeTranslation(planets[i].position, 0, 0 ) );
+          geometry.applyMatrix( new THREE.Matrix4().makeTranslation(planets[i].systemCenterDistance, 0, planets[i].systemCenterPosition ) );
 
           //Affectation d'un Mesh à la propriété three d'une planète, création de la propriété three à la volé pour pouvoir interargir avec la bibliothèque Three.
 					planets[i].three = new THREE.Mesh( geometry, material );
