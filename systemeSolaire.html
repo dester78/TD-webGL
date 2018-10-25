@@ -22,60 +22,126 @@
 
 			var camera, scene, renderer;
       //Tableau permettant de stocker les objets de la classe Planet
+
       var planets=[];
 
 			class Planet {
-				constructor(myOrbitRate, myRotationRate, myDistanceFromAxis, myName, myTexture, mySize,myParent) {
+				constructor(myOrbitRate, myRotationRate, myDistanceFromAxis, myName, myTexture, mySize) {
 
-	        this.orbitRate= myOrbitRate
-	        this.rotationRate= myRotationRate
-	        this.distanceFromAxis= myDistanceFromAxis
-	        this.name= myName;
-	        this.texture= myTexture;
-	       	this.size=mySize;
-					this.parent=myParent;
+	        this._orbitRate= myOrbitRate;
+	        this._rotationRate= myRotationRate;
+	        this._distanceFromAxis= myDistanceFromAxis;
+	        this._name= myName;
+	        this._texture= myTexture;
+	       	this._size=mySize;
+				}
+				set parent(myParent){
+					this._parent=myParent;
+				}
+
+				set positionX(myPositionX){
+					this._positionX=myPositionX;
+				}
+
+				set positionY(myPositionY){
+					this._positionY=myPositionY;
+				}
+
+				set positionZ(myPositionZ){
+					this._positionZ=myPositionZ;
+				}
+
+				set threeMesh(myThreeMesh){
+					this._threeMesh=myThreeMesh;
+				}
+
+				set pivot(myObject3D){
+					this._pivot=myObject3D;
+				}
+
+				get parent(){
+					return this._parent;
+				}
+
+				get positionX(){
+					return this._positionX;
+				}
+
+				get positionY(){
+					return this._positionY;
+				}
+
+				get positionZ(){
+					return this._positionZ;
+				}
+
+				get threeMesh(){
+					return this._threeMesh;
+				}
+
+				get pivot(){
+					return this._pivot;
+				}
+
+
+				get orbitRate(){
+					return this._orbitRate;
+				}
+
+				get rotationRate(){
+					return this._rotationRate;
+				}
+
+				get distanceFromAxis(){
+					return this._distanceFromAxis;
+				}
+
+				get name(){
+					return this._name;
+				}
+				get texture(){
+					return this._texture;
+				}
+
+				get size(){
+					return this._size;
 				}
 
 			}
 
       //Création des objets de la classe Planet
-			const sun=new Planet(500, 0.015, 0, "sun", '../examples/textures/planets/sunmap.jpg', 2,undefined)
-			const earth=new Planet(	365.2564, 0.015, 25, "earth", '../examples/textures/planets/earth_atmos_2048.jpg', 1,sun)//La position du centre du système de l'objet earth est la position de l'objet sun
-			const moon=new Planet(29.5, 0.01, 2.8, "moon", "../examples/textures/planets/moon_1024.jpg", 0.5,earth);
+			var sun=new Planet(500, 0.015, 0, "sun", '../examples/textures/planets/sunmap.jpg', 2);
+			sun.parent=undefined;
+			var earth=new Planet(	365.2564, 0.015, 10, "earth", '../examples/textures/planets/earth_atmos_2048.jpg', 1);
+			//La position du centre du système de l'objet earth est la position de l'objet sun
+			earth.parent=sun;
+			var moon=new Planet(29.5, 0.01, 2.8, "moon", "../examples/textures/planets/moon_1024.jpg", 0.5);
+			moon.parent=earth;
       //Affectation des planètes au tableau planets
+
 			planets.push(sun);
 			planets.push(earth);
 			planets.push(moon);
 
 
 
+
+
 			for (var i = 0 ; i< planets.length;i++){
+
 				console.log(planets[i]);
 			}
-
-
 
 
 			init();
 			animate();
 
 
-			// function threeObject(scene){
-			//
-			// 	var texture = new THREE.TextureLoader().load( this.texture );
-			// 	var material = new THREE.MeshBasicMaterial( { map: texture } );
-			// 	var geometry = new THREE.SphereBufferGeometry( this.size, 32, 32 );
-			// 	this.threeObject=  new THREE.Mesh(geometry, material);
-			// 	scene.add(this.threeObject);
-			// 	this.position.set(this.positionX, this.positionY, this.positionZ);
-			//
-			// }
-
 			function init() {
 
 				scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.position.z = 400;
+				camera.position.z = 200;
 
         //Attribution aux planète
 				for (var i = 0 ; i< planets.length;i++){
@@ -86,11 +152,25 @@
 					var texture = new THREE.TextureLoader().load( planets[i].texture );
 					var material = new THREE.MeshBasicMaterial( { map: texture } );
 					var geometry = new THREE.SphereBufferGeometry( planets[i].size, 32, 32 );
-					planets[i].threeObject=  new THREE.Mesh(geometry, material);
-					scene.add(planets[i].threeObject);
-					console.log(planets[i].positionX,planets[i].positionY,planets[i].positionZ)
-					planets[i].threeObject.position.set(planets[i].positionX, planets[i].positionY, planets[i].positionZ);
-					// planets[i].threeObject(scene);
+
+
+
+					planets[i].threeMesh=  new THREE.Mesh(geometry, material);
+
+
+					if(planets[i].name!="Sun"&&planets[i].parent!=undefined){
+
+						planets[i].positionX=planets[i].distanceFromAxis+planets[i].parent.distanceFromAxis;
+						planets[i].threeMesh.parent=planets[i].parent.threeMesh;
+						planets[i].pivot=new THREE.Object3D();
+						planets[i].parent.threeMesh.add(planets[i].pivot);
+						console.log(planets[i].pivot);
+						planets[i].pivot.add(planets[i].threeMesh);
+					}
+
+
+					scene.add(planets[i].threeMesh);
+					planets[i].threeMesh.position.set(planets[i].positionX, planets[i].positionY, planets[i].positionZ);
 				}
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -115,45 +195,25 @@
 
 			}
 
-			function movePlanet(myPlanet, myTime) {
-
-				if(myPlanet.parent!=undefined){
-
-					if(myPlanet.parent.name="Sun"){
-
-						console.log(myPlanet.parent.name)
-								myPlanet.threeObject.position.x = Math.cos(myTime
-												* (1.0 / (myPlanet.orbitRate * 200)) + 10.0)
-												* myPlanet.distanceFromAxis;
-								myPlanet.threeObject.position.z = Math.sin(myTime
-												* (1.0 / (myPlanet.orbitRate * 200)) + 10.0)
-												* myPlanet.distanceFromAxis;
-					}
-
-					else{
-						myPlanet.threeObject.position.x = Math.cos(myTime
-										* (1.0 / (myPlanet.orbitRate * 200)) + 10.0)
-										* myPlanet.distanceFromAxis;
-						myPlanet.threeObject.position.z = Math.sin(myTime
-										* (1.0 / (myPlanet.orbitRate * 200)) + 10.0)
-										* myPlanet.distanceFromAxis;
-
-						myPlanet.position.threeObject.x = myPlanet.threeObject.position.x + myPlanet.parent.threeObject.position.x;
-						myPlanet.position.threeObject.z = myPlanet.threeObject.position.z + myPlanet.parent.threeObject.position.z;
-					}
-
-				}
-			}
-
 			function animate() {
 
-				var time = Date.now();
+				// var time = Date.now();
 				requestAnimationFrame( animate );
 
 				for (var i = 0 ; i< planets.length;i++){
-			    movePlanet(planets[i], time);
+					// console.log(planets[i])
+
+
+
+					if(planets[i].pivot!=undefined){
+						// console.log(planets[i].pivot.rotation);
+
+						planets[i].pivot.rotation.y+=0.5;
+						// console.log(planets[i].pivot.rotation);
+					}
+					planets[i].threeMesh.rotation.y+=planets[i].rotationRate;
 				}
-				//sphere.rotation.y += 0.01;
+				//
 
 				renderer.render( scene, camera );
 			}
