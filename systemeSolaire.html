@@ -27,7 +27,6 @@
 
 			class Planet {
 				constructor(myOrbitRate, myRotationRate, myDistanceFromAxis, myName, myTexture, mySize) {
-
 	        this._orbitRate= myOrbitRate;
 	        this._rotationRate= myRotationRate;
 	        this._distanceFromAxis= myDistanceFromAxis;
@@ -36,73 +35,52 @@
 	       	this._size=mySize;
 				}
 
-				set threeMesh(myThreeMesh){
-					this._threeMesh=myThreeMesh;
-				}
+				set threeMesh(myThreeMesh){this._threeMesh=myThreeMesh;}
 
-				set pivot(myObject3D){
-					this._pivot=myObject3D;
-				}
+				get threeMesh(){return this._threeMesh;}
 
-				get threeMesh(){
-					return this._threeMesh;
-				}
+				get orbitRate(){return this._orbitRate;}
 
-				get pivot(){
-					return this._pivot;
-				}
+				get rotationRate(){return this._rotationRate;}
 
-				get orbitRate(){
-					return this._orbitRate;
-				}
+				get distanceFromAxis(){return this._distanceFromAxis;}
 
-				get rotationRate(){
-					return this._rotationRate;
-				}
+				get name(){return this._name;}
 
-				get distanceFromAxis(){
-					return this._distanceFromAxis;
-				}
+				get texture(){return this._texture;}
 
-				get name(){
-					return this._name;
-				}
-				get texture(){
-					return this._texture;
-				}
+				get size(){return this._size}
 
-				get size(){
-					return this._size;
-				}
-
-				createThreeMetch(parent){
+				//Méthode permettant de créer un ogjet Mesh propre à une planète
+				createThreeMetch(parentName){
 
 					var texture = new THREE.TextureLoader().load( this.texture );
 					var material = new THREE.MeshBasicMaterial( { map: texture } );
 					var geometry = new THREE.SphereBufferGeometry( this.size, 32, 32 );
 					var threeMesh=new THREE.Mesh(geometry, material);
-					threeMesh.name=this.name;
-					threeMesh.position.set(0,0,0);
 
-					if (parent != undefined){
-						parent.name!=undefined?threeMesh.parentName=parent.name:threeMesh.parentName=undefined
-						parent.position.x != undefined ? threeMesh.position.x = parent.position.x + this.distanceFromAxis:threeMesh.position.x = 0
-					}
+					//Récupère le nom de la planète de l'objet qui appelle la méthode
+					threeMesh.name=this.name;
+					//Initialise la position du Mesh à 0 dans l'espace
+					threeMesh.position.set(0,0,0);
+					//Si le paramètre parentName est présent on attribue un nom de parent à l'objet Mesh de la planète
+					parentName!=undefined?threeMesh.parentName=parentName:threeMesh.parentName=undefined
+					//On fixe la position x du Mesh de la planète en fonction de la propriété distanceFromAxis de la planète
+					threeMesh.position.x =  this.distanceFromAxis
 
 					return threeMesh ;
 				}
-
 			}
 
       //Création des objets de la classe Planet
-			var sun=new Planet(500, 0.015, 0, "sun", '../examples/textures/planets/sunmap.jpg', 20);
+			var sun=new Planet(10, 0, 0, "sun", '../examples/textures/planets/sunmap.jpg', 20);
 			sun.threeMesh=sun.createThreeMetch(undefined)
-			var earth=new Planet(	50, 0.035, 100, "earth", '../examples/textures/planets/earth_atmos_2048.jpg', 10);
-			//La position du centre du système de l'objet earth est la position de l'objet sun
-			earth.threeMesh=earth.createThreeMetch(sun.threeMesh)
-			var moon=new Planet(20, 0.02, 30, "moon", "../examples/textures/planets/moon_1024.jpg", 5);
-      moon.threeMesh=moon.createThreeMetch(earth.threeMesh)
+			var earth=new Planet(	50, 0.00001, 100, "earth", '../examples/textures/planets/earth_atmos_2048.jpg', 10);
+			earth.threeMesh=earth.createThreeMetch(sun.name)
+			var moon=new Planet(20, 0.008, 20, "moon", "../examples/textures/planets/moon_1024.jpg", 5);
+      moon.threeMesh=moon.createThreeMetch(earth.name)
 
+			//Distribution des planètes dans le tableau planets
 			planets.push(sun);
 			planets.push(earth);
 			planets.push(moon);
@@ -120,15 +98,17 @@
         camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 1000 );
 				camera.position.z = 200;
 
+				//Place le soleil en premier car il faut d'abord avoir un Mesh présent dans le système pour y fixer les pivots des autres planètes
 				scene.add(sun.threeMesh);
-        //Attribution aux planète
+
 				for (var i = 0 ; i< planets.length;i++){
 
-					var counterPivotAdd=0
-
+					//Trouve le parent d'une planète en fonction de l'attribue parentName des objets
 					var parent=scene.getObjectByName(planets[i].threeMesh.parentName)
 					var pivot=new THREE.Object3D()
+
 					pivot.name="pivot"+planets[i].threeMesh.name
+
 					if(parent!=undefined){
 						parent.add(pivot);
 						scene.add(planets[i].threeMesh);
@@ -165,33 +145,14 @@
 				for (var i = 0 ; i< planets.length;i++){
 
 					planets[i].threeMesh.rotation.y+=planets[i].rotationRate;
+					// planets[i].threeMesh.rotation.y+=planets[i].rotationRate;
+
+					planets[i].threeMesh.parent.rotation.y+=planets[i].orbitRate/10000;
 				}
-
-				for(children in scene ){
-
-					for(var j=0; j<scene.children.length;j++){
-
-						// if(scene.children[j].type=="Mesh"){
-						//
-						// 		for(var k=0;k< scene.children[j].children.length;k++){
-						//
-						// 			if(scene.children[j].children[k].type=="Object3D"){
-						//
-						// 				scene.children[j].children[k].rotation.y=0.0001
-						// 			}
-						// 		}
-						//
-						// 	}
-						}
-					}
-
-
-				//
 
 				renderer.render( scene, camera );
 
 		}
-
 
 			console.log(scene);
 
