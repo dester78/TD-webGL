@@ -21,18 +21,20 @@
 		<script>
 
 			var camera, scene, renderer;
-      //Tableau permettant de stocker les objets de la classe Planet
+      //Tableau permettant de stocker les objets de la classe solarSystemElement
 
-      var planets=[];
+      var solarSystemElements=[];
 
-			class Planet {
-				constructor(myOrbitRate, myRotationRate, myDistanceFromAxis, myName, myTexture, mySize) {
+			class solarSystemElement {
+				constructor(myOrbitRate, myRotationRate, myDistanceFromAxis, myName,myParent, myTexture, mySize,mySolarSystemObject) {
 	        this._orbitRate= myOrbitRate;
 	        this._rotationRate= myRotationRate;
 	        this._distanceFromAxis= myDistanceFromAxis;
 	        this._name= myName;
+					this._parent= myParent;
 	        this._texture= myTexture;
 	       	this._size=mySize;
+					this._solarSystemObject=mySolarSystemObject;
 				}
 
 				set threeMesh(myThreeMesh){this._threeMesh=myThreeMesh;}
@@ -41,53 +43,96 @@
 
 				get orbitRate(){return this._orbitRate;}
 
-				get rotationRate(){return this._rotationRate;}
+				get rotationRate(){
+
+					if(this._rotationRate!==0){
+						return 1/this._rotationRate;
+					}
+
+					else 	return this._rotationRate;
+				}
 
 				get distanceFromAxis(){return this._distanceFromAxis;}
 
 				get name(){return this._name;}
 
+				get parent(){return this._parent;}
+
 				get texture(){return this._texture;}
 
 				get size(){return this._size}
 
+				get solarSystemObject(){return this._solarSystemObject}
+
 				//Méthode permettant de créer un ogjet Mesh propre à une planète
-				createThreeMetch(parentName){
+				createPlanetThreeMetch(){
+					var planetTexture = new THREE.TextureLoader().load( this.texture );
+					var planetMaterial = new THREE.MeshBasicMaterial( { map: planetTexture } );
+					var planetGeometry = new THREE.SphereBufferGeometry( this.size, 32, 32 );
+					var planetThreeMesh=new THREE.Mesh(planetGeometry, planetMaterial);
+					this.threeMesh=planetThreeMesh;
+				}
 
-					var texture = new THREE.TextureLoader().load( this.texture );
-					var material = new THREE.MeshBasicMaterial( { map: texture } );
-					var geometry = new THREE.SphereBufferGeometry( this.size, 32, 32 );
-					var threeMesh=new THREE.Mesh(geometry, material);
-
+				customizeThreeMetch(){
 					//Récupère le nom de la planète de l'objet qui appelle la méthode
-					threeMesh.name=this.name;
+					this.threeMesh.name=this.name;
 					//Initialise la position du Mesh à 0 dans l'espace
-					threeMesh.position.set(0,0,0);
+					this.threeMesh.position.set(this.distanceFromAxis,0,0);
 					//Si le paramètre parentName est présent on attribue un nom de parent à l'objet Mesh de la planète
-					parentName!=undefined?threeMesh.parentName=parentName:threeMesh.parentName=undefined
+					this.parent.name!=false?this.threeMesh.parentName=this.parent.name:this.threeMesh.parentName=false
 					//On fixe la position x du Mesh de la planète en fonction de la propriété distanceFromAxis de la planète
-					threeMesh.position.x =  this.distanceFromAxis
 
-					return threeMesh ;
+
+				}
+
+				createRingThreeMetch(){
+
+					var ringGeometry = new THREE.TorusGeometry(this.size, 0.1, 0.5, 800);
+					var ringMaterial = new THREE.MeshBasicMaterial({color: this.texture, side: THREE.DoubleSide});
+					var ringThreeMesh=new THREE.Mesh(ringGeometry, ringMaterial);
+					this.threeMesh=ringThreeMesh;
+					//Règle l'orientation de l'anneau à modifier pour les anneaux inclinés
+					this.threeMesh.rotation.x = Math.PI / 2;
+
 				}
 			}
 
-      //Création des objets de la classe Planet
-			var sun=new Planet(10, 0, 0, "sun", '../examples/textures/planets/sunmap.jpg', 20);
-			sun.threeMesh=sun.createThreeMetch(undefined)
-			var earth=new Planet(	50, 0.00001, 100, "earth", '../examples/textures/planets/earth_atmos_2048.jpg', 10);
-			earth.threeMesh=earth.createThreeMetch(sun.name)
-			var moon=new Planet(20, 0.008, 20, "moon", "../examples/textures/planets/moon_1024.jpg", 5);
-      moon.threeMesh=moon.createThreeMetch(earth.name)
+      //Création des objets de la classe solarSystemElement
+			var sun=new solarSystemElement(0, 600, 0, "sun",false, '../examples/textures/planets/sunmap.jpg', 20,"planet");
+			var earth=new solarSystemElement(	365, 24, 147, "earth",sun, '../examples/textures/planets/earth_atmos_2048.jpg', 10,"planet");
+			//var earthRing=new solarSystemElement(	365, 24, 0, "earthRing",earth, "#9c917f", 20,"ring");
+			var moon=new solarSystemElement(28, 0, 20, "moon",earth, "../examples/textures/planets/moon_1024.jpg", 5,"planet");
+			var mercury=new solarSystemElement(150, 0.00005, 33, "mercury", sun,"../examples/textures/planets/mercurymap.jpg", 3,"planet");
+			var venus=new solarSystemElement(75, 0.000015, 66, "venus", sun,"../examples/textures/planets/venusmap.jpg", 6,"planet");
+			var mars=new solarSystemElement(33, 0.000005, 150, "mars",sun, "../examples/textures/planets/mars_1k_color.jpg", 15,"planet");
+			var jupiter=new solarSystemElement(20, 0.000001, 500, "jupiter", sun,"../examples/textures/planets/jupitermap.jpg", 50,"planet");
+			var saturn=new solarSystemElement(5, 0.0000005, 1000, "saturn",sun, "../examples/textures/planets/saturnmap.jpg", 100,"planet");
+			var uranus=new solarSystemElement(1, 0.000000165, 2000, "uranus", sun,"../examples/textures/planets/uranusmap.jpg", 200,"planet");
+			var neptune=new solarSystemElement(0.5, 0.00000008, 4000, "neptune",sun, "../examples/textures/planets/neptunemap.jpg", 300,"planet");
 
-			//Distribution des planètes dans le tableau planets
-			planets.push(sun);
-			planets.push(earth);
-			planets.push(moon);
 
-			for (var i = 0 ; i< planets.length;i++){
 
-				console.log(planets[i]);
+			//Distribution des planètes dans le tableau solarSystemElement
+			solarSystemElements.push(sun);
+			solarSystemElements.push(earth);
+			solarSystemElements.push(moon);
+			solarSystemElements.push(mercury);
+			solarSystemElements.push(venus);
+			solarSystemElements.push(mars);
+			solarSystemElements.push(jupiter);
+			solarSystemElements.push(saturn);
+			solarSystemElements.push(uranus);
+			solarSystemElements.push(neptune);
+
+			for (var i = 0 ; i< solarSystemElements.length;i++){
+
+					if(solarSystemElements[i].solarSystemObject=="planet"){
+						solarSystemElements[i].createPlanetThreeMetch();
+					}
+					else{
+						solarSystemElements[i].createRingThreeMetch();
+					}
+					solarSystemElements[i].customizeThreeMetch()
 			}
 			init();
 			animate();
@@ -95,34 +140,41 @@
 			function init() {
 
 				scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 1000 );
+        camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 150000 );
 				camera.position.z = 200;
 
 				//Place le soleil en premier car il faut d'abord avoir un Mesh présent dans le système pour y fixer les pivots des autres planètes
 				scene.add(sun.threeMesh);
 
-				for (var i = 0 ; i< planets.length;i++){
+				for (var i = 0 ; i< solarSystemElements.length;i++){
 
 					//Trouve le parent d'une planète en fonction de l'attribue parentName des objets
-					var parent=scene.getObjectByName(planets[i].threeMesh.parentName)
+					var parent=scene.getObjectByName(solarSystemElements[i].threeMesh.parentName)
 					var pivot=new THREE.Object3D()
 
-					pivot.name="pivot"+planets[i].threeMesh.name
-
 					if(parent!=undefined){
+
+						//Nomme le pivot en fonction de la planète qui va y être ratachée
+						pivot.name="pivot"+solarSystemElements[i].threeMesh.name
+						//Ajoute le pivot au parent de la planète
 						parent.add(pivot);
-						scene.add(planets[i].threeMesh);
-						parent.getObjectByName(pivot.name).add(planets[i].threeMesh)
+						//Ajoute la planète à la scène
+						scene.add(solarSystemElements[i].threeMesh);
+						//Ajoute la planète à son pivot
+						parent.getObjectByName(pivot.name).add(solarSystemElements[i].threeMesh)
+
 					}
+
 				}
 
+				//Mise en place du rendu et ajout de ce dernier à la fenêtre du navigateur
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				document.body.appendChild( renderer.domElement );
 
         //Permet de contrôler la caméra rotative
-        var controls = new THREE.OrbitControls( camera, renderer.domElement );
+        const controls = new THREE.OrbitControls( camera, renderer.domElement );
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
@@ -142,16 +194,17 @@
 
 				requestAnimationFrame( animate );
 
-				for (var i = 0 ; i< planets.length;i++){
+				for (var i = 0 ; i< solarSystemElements.length;i++){
 
-					planets[i].threeMesh.rotation.y+=planets[i].rotationRate;
-					// planets[i].threeMesh.rotation.y+=planets[i].rotationRate;
+					if(solarSystemElements[i].solarSystemObject!="ring"){
+					//Gère la rotation d'une planète sur elle même
+					solarSystemElements[i].threeMesh.rotation.y+=solarSystemElements[i].rotationRate;
+					//Gère la rotation du pivot d'une planète et donc son orbite
+					solarSystemElements[i].threeMesh.parent.rotation.y+=solarSystemElements[i].orbitRate/10000;
+					}
 
-					planets[i].threeMesh.parent.rotation.y+=planets[i].orbitRate/10000;
 				}
-
 				renderer.render( scene, camera );
-
 		}
 
 			console.log(scene);
