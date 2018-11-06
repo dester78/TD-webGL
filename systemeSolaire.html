@@ -98,17 +98,17 @@
 			}
 
       //Création des objets de la classe solarSystemElement
-			var sun=new solarSystemElement(0, 600, 0, "sun",false, '../examples/textures/planets/sunmap.jpg', 20,"planet");
-			var earth=new solarSystemElement(	365, 24, 147, "earth",sun, '../examples/textures/planets/earth_atmos_2048.jpg', 10,"planet");
+			var sun=new solarSystemElement(0, 600, 0, "sun",false, '../examples/textures/planets/sunmap.jpg', 50,"planet");
+			var mercury=new solarSystemElement(150, 0.1, 100, "mercury", sun,"../examples/textures/planets/mercurymap.jpg", 4,"planet");
+			var venus=new solarSystemElement(75, 0.01, 200, "venus", sun,"../examples/textures/planets/venusmap.jpg", 8,"planet");
+			var earth=new solarSystemElement(	80, 0.002, 300, "earth",sun, '../examples/textures/planets/earth_atmos_2048.jpg', 10,"planet");
 			//var earthRing=new solarSystemElement(	365, 24, 0, "earthRing",earth, "#9c917f", 20,"ring");
-			var moon=new solarSystemElement(28, 0, 20, "moon",earth, "../examples/textures/planets/moon_1024.jpg", 5,"planet");
-			var mercury=new solarSystemElement(150, 0.00005, 33, "mercury", sun,"../examples/textures/planets/mercurymap.jpg", 3,"planet");
-			var venus=new solarSystemElement(75, 0.000015, 66, "venus", sun,"../examples/textures/planets/venusmap.jpg", 6,"planet");
-			var mars=new solarSystemElement(33, 0.000005, 150, "mars",sun, "../examples/textures/planets/mars_1k_color.jpg", 15,"planet");
-			var jupiter=new solarSystemElement(20, 0.000001, 500, "jupiter", sun,"../examples/textures/planets/jupitermap.jpg", 50,"planet");
-			var saturn=new solarSystemElement(5, 0.0000005, 1000, "saturn",sun, "../examples/textures/planets/saturnmap.jpg", 100,"planet");
-			var uranus=new solarSystemElement(1, 0.000000165, 2000, "uranus", sun,"../examples/textures/planets/uranusmap.jpg", 200,"planet");
-			var neptune=new solarSystemElement(0.5, 0.00000008, 4000, "neptune",sun, "../examples/textures/planets/neptunemap.jpg", 300,"planet");
+			var moon=new solarSystemElement(28, 0, 20, "moon",earth, "../examples/textures/planets/moon_1024.jpg", 3,"planet");
+			var mars=new solarSystemElement(33, 0.004, 320, "mars",sun, "../examples/textures/planets/mars_1k_color.jpg", 6,"planet");
+			var jupiter=new solarSystemElement(12, 0.01, 500, "jupiter", sun,"../examples/textures/planets/jupitermap.jpg", 40,"planet");
+			var saturn=new solarSystemElement(16, 0.02, 700, "saturn",sun, "../examples/textures/planets/saturnmap.jpg", 30,"planet");
+			var uranus=new solarSystemElement(20, 0.03, 800, "uranus", sun,"../examples/textures/planets/uranusmap.jpg", 25,"planet");
+			var neptune=new solarSystemElement(25, 04, 950, "neptune",sun, "../examples/textures/planets/neptunemap.jpg", 20,"planet");
 
 
 
@@ -140,8 +140,8 @@
 			function init() {
 
 				scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 150000 );
-				camera.position.z = 200;
+        camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 500000 );
+				camera.position.z = 500;
 
 				//Place le soleil en premier car il faut d'abord avoir un Mesh présent dans le système pour y fixer les pivots des autres planètes
 				scene.add(sun.threeMesh);
@@ -166,6 +166,19 @@
 					}
 
 				}
+
+				var path = "starfield/";
+				var format = '.png';
+				var urls = [
+					path + 'starsky' + format, path + 'starsky' + format,
+					path + 'starsky' + format, path + 'starsky' + format,
+					path + 'starsky' + format, path + 'starsky' + format
+				];
+				var reflectionCube = new THREE.CubeTextureLoader().load( urls );
+				reflectionCube.format = THREE.RGBFormat;
+
+				scene.background = reflectionCube;
+
 
 				//Mise en place du rendu et ajout de ce dernier à la fenêtre du navigateur
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -198,7 +211,7 @@
 
 					if(solarSystemElements[i].solarSystemObject!="ring"){
 					//Gère la rotation d'une planète sur elle même
-					solarSystemElements[i].threeMesh.rotation.y+=solarSystemElements[i].rotationRate;
+					solarSystemElements[i].threeMesh.rotation.y+=solarSystemElements[i].rotationRate/10000;
 					//Gère la rotation du pivot d'une planète et donc son orbite
 					solarSystemElements[i].threeMesh.parent.rotation.y+=solarSystemElements[i].orbitRate/10000;
 					}
