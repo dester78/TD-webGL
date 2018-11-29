@@ -36,13 +36,14 @@
 		<div id="info">
 			<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - spotlight by <a href="http://master-domain.com" target="_blank" rel="noopener">Master James</a><br />
 		</div>
-		
-		<script src="../build/three.js"></script>
-		<script src="js/controls/OrbitControls.js"></script>
-		
-		<script src="js/libs/dat.gui.min.js"></script>
-		
-		<script src="js/WebGL.js"></script>
+
+		<script src="../../build/three.js"></script>
+		<script src="../../examples/js/controls/OrbitControls.js"></script>
+
+		<script src="../../examples/js/libs/dat.gui.min.js"></script>
+
+		<script src="../../examples/js/WebGL.js"></script>
+
 		
 		<script>
 
@@ -87,11 +88,11 @@
 				scene.add( ambient );
 
 				spotLight = new THREE.SpotLight( 0xffffff, 1 );
-				spotLight.position.set( 15, 40, 35 );
+				spotLight.position.set( 300, 100, 100 );
 				spotLight.angle = Math.PI / 4;
 				spotLight.penumbra = 0.05;
 				spotLight.decay = 2;
-				spotLight.distance = 200;
+				spotLight.distance = 800;
 
 				spotLight.castShadow = true;
 				spotLight.shadow.mapSize.width = 1024;
@@ -100,9 +101,20 @@
 				spotLight.shadow.camera.far = 200;
 				scene.add( spotLight );
 
-				
+				var planeMaterial = new THREE.MeshPhongMaterial( { color: 0x808080, dithering: true } );
+
+				var planeGeometry = new THREE.PlaneBufferGeometry( 2000, 2000 );
+
+				var planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
+				planeMesh.position.set( 0, - 1, 0 );
+				planeMesh.rotation.x = - Math.PI * 0.5;
+				planeMesh.receiveShadow = true;
+				scene.add( planeMesh );
+
 
 				sierpinskiObj = sierpinski(level,100);
+				sierpinskiObj.name="pyramid";
+				
     			scene.add(sierpinskiObj);
 
 
@@ -160,6 +172,7 @@
 				}
 				return geometry;
 			}
+
 			function sierpinski (level, side) {
 				var geometry = sierpinskiBuild(level, side,
 												new THREE.Vector3(-side/2,
@@ -167,7 +180,9 @@
 																-side / (sin_PI_3 * 4)));
 				geometry.mergeVertices(); // simplify mesh
 				geometry.computeFaceNormals();
-				var mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
+				var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial());
+				mesh.castShadow = true;
+
 				return mesh;
 			}
 
@@ -196,7 +211,8 @@
 					distance: spotLight.distance,
 					angle: spotLight.angle,
 					penumbra: spotLight.penumbra,
-					decay: spotLight.decay
+					decay: spotLight.decay,
+					level:level
 				}
 
 				gui.addColor( params, 'light color' ).onChange( function ( val ) {
@@ -213,8 +229,51 @@
 
 				} );
 
+				
+				gui.add( params, 'level', 1, 10,1 ).onChange( function ( val ) {
 
-				gui.add( params, 'distance', 50, 200 ).onChange( function ( val ) {
+					level = val;
+					
+					scene.remove(scene.getObjectByName("pyramid"));
+					
+
+					sierpinskiObj = sierpinski(level,100);
+					sierpinskiObj.name="pyramid";
+					scene.add(sierpinskiObj);
+					
+					render();
+				} );
+
+
+
+
+				gui.addColor( params, 'color' ).onChange( function ( val ) {
+
+
+
+
+spotLight.color.setHex( val );
+
+render();
+
+} );
+
+
+				gui.add( params, 'level', 1, 10,1 ).onChange( function ( val ) {
+
+					level = val;
+
+					scene.remove(scene.getObjectByName("pyramid"));
+
+					sierpinskiObj = sierpinski(level,100);
+					sierpinskiObj.name="pyramid";
+					scene.add(sierpinskiObj);
+
+				render();
+				} );
+
+				gui.add( params, 'distance', 50, 800 ).onChange( function ( val ) {
+
 
 					spotLight.distance = val;
 					render();
