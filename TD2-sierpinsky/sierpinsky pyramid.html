@@ -180,7 +180,7 @@
 																-side / (sin_PI_3 * 4)));
 				geometry.mergeVertices(); // simplify mesh
 				geometry.computeFaceNormals();
-				var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial());
+				var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial( {color: 0x808080, dithering: true }));
 				mesh.castShadow = true;
 
 				return mesh;
@@ -213,6 +213,9 @@
 					penumbra: spotLight.penumbra,
 					decay: spotLight.decay,
 					level:level
+					// 'pyramid color':scene.getObjectByName("pyramid").material.color.setHex()
+
+					
 				}
 
 				gui.addColor( params, 'light color' ).onChange( function ( val ) {
@@ -230,7 +233,7 @@
 				} );
 
 				
-				gui.add( params, 'level', 1, 10,1 ).onChange( function ( val ) {
+				gui.add( params, 'level', 1, 8,1 ).onChange( function ( val ) {
 
 					level = val;
 					
@@ -247,30 +250,16 @@
 
 
 
-				gui.addColor( params, 'color' ).onChange( function ( val ) {
+				// gui.addColor( params, 'pyramid color' ).onChange( function ( val ) {
 
 
+				// 	scene.getObjectByName("pyramid").materiel.color.setHex(val);
+				// 	console.log(scene.getObjectByName("pyramid"));
 
+				// render();
 
-spotLight.color.setHex( val );
+				// } );
 
-render();
-
-} );
-
-
-				gui.add( params, 'level', 1, 10,1 ).onChange( function ( val ) {
-
-					level = val;
-
-					scene.remove(scene.getObjectByName("pyramid"));
-
-					sierpinskiObj = sierpinski(level,100);
-					sierpinskiObj.name="pyramid";
-					scene.add(sierpinskiObj);
-
-				render();
-				} );
 
 				gui.add( params, 'distance', 50, 800 ).onChange( function ( val ) {
 
