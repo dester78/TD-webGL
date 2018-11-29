@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - lights - spotlight</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				color: #ffffff;
+				padding: 5px;
+				font-family: Monospace;
+				font-size: 13px;
+				text-align: center;
+			}
+
+			a {
+				color: #ff0080;
+				text-decoration: none;
+			}
+
+			a:hover {
+				color: #0080ff;
+			}
+		</style>
+	</head>
+	<body>
+		
+		<div id="info">
+			<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - spotlight by <a href="http://master-domain.com" target="_blank" rel="noopener">Master James</a><br />
+		</div>
+		
+		<script src="../build/three.js"></script>
+		<script src="js/controls/OrbitControls.js"></script>
+		
+		<script src="js/libs/dat.gui.min.js"></script>
+		
+		<script src="js/WebGL.js"></script>
+		
+		<script>
+
+			if ( WEBGL.isWebGLAvailable() === false ) {
+
+				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+			}
+
+			var renderer, scene, camera;
+			var sin_PI_3 = Math.sin(Math.PI/3);
+			var level = 3;
+
+			var spotLight, lightHelper, shadowCameraHelper;
+
+			var gui;
+
+			function init() {
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+
+				scene = new THREE.Scene();
+
+				camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 1000 );
+				camera.position.set( 65, 8, - 10 );
+
+				var controls = new THREE.OrbitControls( camera, renderer.domElement );
+				controls.addEventListener( 'change', render );
+				controls.minDistance = 20;
+				controls.maxDistance = 500;
+				controls.enablePan = false;
+
+				var ambient = new THREE.AmbientLight( 0xffffff, 0.1 );
+				scene.add( ambient );
+
+				spotLight = new THREE.SpotLight( 0xffffff, 1 );
+				spotLight.position.set( 15, 40, 35 );
+				spotLight.angle = Math.PI / 4;
+				spotLight.penumbra = 0.05;
+				spotLight.decay = 2;
+				spotLight.distance = 200;
+
+				spotLight.castShadow = true;
+				spotLight.shadow.mapSize.width = 1024;
+				spotLight.shadow.mapSize.height = 1024;
+				spotLight.shadow.camera.near = 10;
+				spotLight.shadow.camera.far = 200;
+				scene.add( spotLight );
+
+				
+
+				sierpinskiObj = sierpinski(level,100);
+    			scene.add(sierpinskiObj);
+
+
+				window.addEventListener( 'resize', onResize, false );
+
+			}
+
+			function halfpoint (p1, p2) {
+				var hp = new THREE.Vector3(0,0,0).add(p1,p2);
+				hp.divideScalar(2);
+				return hp;
+			}
+			
+			function sierpinskiBuild(level, side, v0, geometry) {
+				if (geometry == null) geometry = new THREE.Geometry();
+				var v1 = new THREE.Vector3().copy(v0);
+				v1.x += side;
+				var v2 = new THREE.Vector3().copy(v0);	// sommet
+				v2.x += side / 2;
+				v2.y += side * sin_PI_3;
+				// v2.z += side / (sin_PI_3 * 4);
+				v2.z += side / 2;
+				var v3 = new THREE.Vector3().copy(v0);
+				v3.z += side;
+				var v4 = new THREE.Vector3().copy(v0);
+				v4.x += side;
+				v4.z += side;
+
+				//console.log(level, "v0", v0, "v1", v1, "v2", v2, "v3", v3);
+				if (level === 1) {
+					var v0_i = geometry.vertices.length;
+					geometry.vertices.push(v0);
+					geometry.vertices.push(v1);
+					geometry.vertices.push(v2);	//sommet
+					geometry.vertices.push(v3);
+					geometry.vertices.push(v4);
+					// Push face, defined with vertices in CCW order
+					geometry.faces.push(new THREE.Face3(v0_i+0, v0_i+2, v0_i+1));	
+					geometry.faces.push(new THREE.Face3(v0_i+1, v0_i+2, v0_i+4));
+					geometry.faces.push(new THREE.Face3(v0_i+3, v0_i+2, v0_i+0));
+					geometry.faces.push(new THREE.Face3(v0_i+4, v0_i+2, v0_i+3));
+					geometry.faces.push(new THREE.Face3(v0_i+0, v0_i+1, v0_i+3));
+					geometry.faces.push(new THREE.Face3(v0_i+3, v0_i+1, v0_i+4));
+				} else {
+					var hside = side/2;
+					sierpinskiBuild(level-1, hside, v0 , geometry);
+					var v01 = halfpoint(v0,v1);
+					sierpinskiBuild(level-1, hside, v01, geometry);
+					var v02 = halfpoint(v0,v2);
+					sierpinskiBuild(level-1, hside, v02, geometry);
+					var v03 = halfpoint(v0,v3);
+					sierpinskiBuild(level-1, hside, v03, geometry);
+					var v04 = halfpoint(v0, v4)
+					sierpinskiBuild(level-1, hside, v04, geometry);
+				}
+				return geometry;
+			}
+			function sierpinski (level, side) {
+				var geometry = sierpinskiBuild(level, side,
+												new THREE.Vector3(-side/2,
+																0,
+																-side / (sin_PI_3 * 4)));
+				geometry.mergeVertices(); // simplify mesh
+				geometry.computeFaceNormals();
+				var mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
+				return mesh;
+			}
+
+			function onResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function render() {
+
+				renderer.render( scene, camera );
+
+			}
+
+			function buildGui() {
+
+				gui = new dat.GUI();
+
+				var params = {
+					'light color': spotLight.color.getHex(),
+					intensity: spotLight.intensity,
+					distance: spotLight.distance,
+					angle: spotLight.angle,
+					penumbra: spotLight.penumbra,
+					decay: spotLight.decay
+				}
+
+				gui.addColor( params, 'light color' ).onChange( function ( val ) {
+
+					spotLight.color.setHex( val );
+					render();
+
+				} );
+
+				gui.add( params, 'intensity', 0, 2 ).onChange( function ( val ) {
+
+					spotLight.intensity = val;
+					render();
+
+				} );
+
+
+				gui.add( params, 'distance', 50, 200 ).onChange( function ( val ) {
+
+					spotLight.distance = val;
+					render();
+
+				} );
+
+				gui.add( params, 'angle', 0, Math.PI / 3 ).onChange( function ( val ) {
+
+					spotLight.angle = val;
+					render();
+
+				} );
+
+				gui.add( params, 'penumbra', 0, 1 ).onChange( function ( val ) {
+
+					spotLight.penumbra = val;
+					render();
+
+				} );
+
+				gui.add( params, 'decay', 1, 2 ).onChange( function ( val ) {
+
+					spotLight.decay = val;
+					render();
+
+				} );
+
+				gui.open();
+
+			}
+
+			init();
+
+			buildGui();
+
+			render();
+
+		</script>
+
+	</body>
+
+</html>
