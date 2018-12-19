@@ -37,8 +37,9 @@
 		<script src="../build/three.js"></script>
 		<script src="../examples/js/controls/OrbitControls.js"></script>
 		<script src="../examples/js/loaders/ColladaLoader.js"> </script>
-
+		
 		<script src="../examples/js/libs/dat.gui.min.js"></script>
+		<script src="../examples/js/libs/stats.min.js"></script>
 
 		<script src="../examples/js/WebGL.js"></script>
 
@@ -50,6 +51,7 @@
 			var spotLight, lightHelper, shadowCameraHelper;
 			var gui;
 			var tree;
+			var bunny;
 			function init() {
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -81,22 +83,17 @@
 				spotLight.shadow.camera.near = 10;
 				spotLight.shadow.camera.far = 200;
 				scene.add( spotLight );
-				lightHelper = new THREE.SpotLightHelper( spotLight );
-				scene.add( lightHelper );
-				shadowCameraHelper = new THREE.CameraHelper( spotLight.shadow.camera );
-				scene.add( shadowCameraHelper );
-				scene.add( new THREE.AxesHelper( 10 ) );
-
-				var material = new THREE.MeshPhongMaterial( { color: 0x808080, dithering: true } );
-				var geometry = new THREE.PlaneBufferGeometry( 2000, 2000 );
+				var texture = new THREE.TextureLoader().load( '../examples/textures/terrain/grasslight-big.jpg' );
+				var material = new THREE.MeshPhongMaterial( { map: texture, dithering: true } );
+				var geometry = new THREE.SphereBufferGeometry( 30, 32, 32 );
 				var mesh = new THREE.Mesh( geometry, material );
-				mesh.position.set( 0, - 1, 0 );
+				mesh.position.set( 0, -30, 0 );
 				mesh.rotation.x = - Math.PI * 0.5;
 				mesh.receiveShadow = true;
 				scene.add( mesh );
 
 				var loadingManager = new THREE.LoadingManager(function(){
-					tree.scale.set(0.02,0.02,0.02); //change la taille
+					tree.scale.set(0.07,0.07,0.07); //change la taille
 					tree.traverse(function(child){
 						child.traverse(function(e){
 							e.castShadow = true;
@@ -110,6 +107,23 @@
 				loader.load('./Object3D/arbre/model.dae', function(collada){
 					tree = collada.scene;
 				})
+
+				
+				var loadingManager2 = new THREE.LoadingManager(function(){
+					bunny.scale.set(0.5,0.5,0.5); //change la taille
+					bunny.traverse(function(child){
+						child.traverse(function(e){
+							e.castShadow = true;
+							e.receiveShadow = true;
+						})
+					})
+					scene.add(bunny);
+				})
+
+				var loader2 = new THREE.ColladaLoader(loadingManager2);
+				loader2.load('./Object3D/lapin/model.dae', function(collada){
+					bunny = collada.scene;
+				})
 				
 				
 				controls.update();
@@ -121,8 +135,7 @@
 				renderer.setSize( window.innerWidth, window.innerHeight );
 			}
 			function render() {
-				lightHelper.update();
-				shadowCameraHelper.update();
+			
 				renderer.render( scene, camera );
 			}
 			function buildGui() {
