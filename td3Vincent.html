@@ -52,7 +52,10 @@
 			var tree;
 
 			var listener;
+
 			var sound;
+			var soundAmbiant;
+
 			var audioLoader;
 
 			function init() {
@@ -100,6 +103,26 @@
 				mesh.receiveShadow = true;
 				scene.add( mesh );
 
+				listener = new THREE.AudioListener();
+				camera.add( listener );
+				sound = new THREE.PositionalAudio( listener );
+				soundAmbiant = new THREE.PositionalAudio( listener );
+				audioLoader = new THREE.AudioLoader();
+
+				
+				audioLoader.load( 'sound/0595.ogg', function( buffer ) {
+				soundAmbiant.setBuffer( buffer );
+				soundAmbiant.setLoop( true );
+				soundAmbiant.setVolume( 1 );
+				soundAmbiant.play();
+				});
+					
+				audioLoader.load( 'sound/0999.ogg', function( buffer ) {
+				sound.setBuffer( buffer );
+				sound.setRefDistance( 20 );
+				sound.play();
+				});
+
 				var loadingManager = new THREE.LoadingManager(function(){
 					tree.scale.set(0.02,0.02,0.02); //change la taille
 					tree.traverse(function(child){
@@ -114,20 +137,9 @@
 				var loader = new THREE.ColladaLoader(loadingManager);
 				loader.load('./Object3D/arbre/model.dae', function(collada){
 					tree = collada.scene;
+					tree.add(sound);
 				})
 				
-				listener = new THREE.AudioListener();
-				camera.add( listener );
-				sound = new THREE.PositionalAudio( listener );
-				audioLoader = new THREE.AudioLoader();
-					
-				audioLoader.load( 'sound/0999.ogg', function( buffer ) {
-				sound.setBuffer( buffer );
-				sound.setRefDistance( 20 );
-				sound.play();
-				});
-
-				tree.add( sound );
 
 				controls.update();
 				window.addEventListener( 'resize', onResize, false );
@@ -179,7 +191,35 @@
 				gui.open();
 			}
 
+			// function sound(){
+				
+			// 	listener = new THREE.AudioListener();
+			// 	camera.add( listener );
+			// 	sound = new THREE.PositionalAudio( listener );
+			// 	soundAmbiant = new THREE.PositionalAudio( listener );
+			// 	audioLoader = new THREE.AudioLoader();
+
+				
+			// 	audioLoader.load( 'sound/0595.ogg', function( buffer ) {
+			// 	soundAmbiant.setBuffer( buffer );
+			// 	soundAmbiant.setLoop( true );
+			// 	soundAmbiant.setVolume( 1 );
+			// 	soundAmbiant.play();
+			// 	});
+					
+			// 	audioLoader.load( 'sound/0999.ogg', function( buffer ) {
+			// 	sound.setBuffer( buffer );
+			// 	sound.setRefDistance( 20 );
+			// 	sound.play();
+			// 	});
+				
+			// 	console.log(scene.children[5]);
+			// 	scene.children[6].add(sound);
+
+			// };
+
 			init();
+			// sound();
 			buildGui();
 			render();
 		</script>
